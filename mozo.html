@@ -1,0 +1,441 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Fast Food 58 — Mozo</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#111;font-family:system-ui,sans-serif;color:#e2e8f0;min-height:100vh;}
+.header{background:#CC0000;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;}
+.logo-sq{width:32px;height:32px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:11px;font-weight:900;color:#CC0000;}
+.header-name{font-size:14px;font-weight:700;color:#fff;}
+.header-sub{font-size:10px;color:rgba(255,255,255,.7);}
+.logout-btn{background:rgba(255,255,255,.2);border:0.5px solid rgba(255,255,255,.3);color:#fff;font-size:11px;padding:5px 10px;border-radius:7px;cursor:pointer;}
+.tabs{display:flex;background:#1a1a1a;border-bottom:1px solid #2a2a2a;overflow-x:auto;}
+.tab{padding:12px 16px;font-size:12px;font-weight:500;color:#666;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;}
+.tab:hover{color:#ccc;}
+.tab.active{color:#CC0000;border-bottom-color:#CC0000;}
+.view{display:none;padding:14px;}.view.active{display:block;}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:14px;margin-bottom:10px;}
+.card-title{font-size:12px;font-weight:600;color:#888;margin-bottom:12px;}
+.pedido-row{display:flex;align-items:flex-start;gap:8px;padding:10px 0;border-bottom:1px solid #222;flex-wrap:wrap;}
+.pedido-row:last-child{border-bottom:none;}
+.ped-num{font-size:12px;font-weight:700;color:#CC0000;min-width:40px;}
+.ped-info{flex:1;min-width:120px;}
+.ped-nombre{font-size:12px;color:#e2e8f0;font-weight:500;}
+.ped-items{font-size:11px;color:#555;margin-top:2px;}
+.ped-nota{font-size:11px;color:#fb923c;margin-top:2px;}
+.ped-total{font-size:12px;font-weight:600;color:#FFD700;}
+.s-pill{font-size:10px;padding:2px 8px;border-radius:8px;}
+.s-espera{background:#1a1a00;color:#FFD700;border:0.5px solid #666600;}
+.s-cocina{background:#1a1a2e;color:#818cf8;border:0.5px solid #312e81;}
+.s-listo{background:#0a2e1e;color:#34d399;border:0.5px solid #064e35;}
+.s-entregado{background:#1e1e1e;color:#555;border:0.5px solid #333;}
+.s-cancelado{background:#1a0000;color:#f87171;border:0.5px solid #660000;}
+.btn-row{display:flex;gap:4px;flex-wrap:wrap;margin-top:6px;}
+.act-btn{font-size:11px;padding:4px 10px;border-radius:6px;border:0.5px solid;cursor:pointer;background:transparent;}
+.btn-entregar{color:#34d399;border-color:#34d399;}
+.btn-editar{color:#38bdf8;border-color:#38bdf8;}
+.btn-eliminar{color:#f87171;border-color:#f87171;}
+
+/* MENÚ */
+.cats{display:flex;overflow-x:auto;gap:0;background:#1a1a1a;border-bottom:1px solid #2a2a2a;margin:-14px -14px 14px;}
+.cat{padding:10px 14px;font-size:12px;font-weight:500;color:#666;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;}
+.cat.active{color:#CC0000;border-bottom-color:#CC0000;}
+.search-wrap{margin-bottom:12px;}
+.search-inp{width:100%;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:8px;padding:9px 12px;font-size:13px;color:#e2e8f0;outline:none;}
+.search-inp::placeholder{color:#444;}
+.search-inp:focus{border-color:#CC0000;}
+.item{display:flex;align-items:center;gap:10px;background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:10px;margin-bottom:7px;}
+.item.added{border-color:#CC0000;}
+.item-icon{width:44px;height:44px;background:#111;border-radius:8px;display:flex;align-items:center;justify-content:center;font-size:20px;flex-shrink:0;}
+.item-name{font-size:13px;font-weight:600;color:#e2e8f0;margin-bottom:2px;}
+.item-desc{font-size:11px;color:#555;}
+.item-price{font-size:14px;font-weight:700;color:#FFD700;}
+.add-btn{font-size:11px;padding:5px 12px;border-radius:16px;border:1px solid;cursor:pointer;background:transparent;}
+.add-idle{color:#CC0000;border-color:#CC0000;}
+.add-done{color:#34d399;border-color:#34d399;background:#0a2e1e;}
+.cart-bar{position:fixed;bottom:14px;left:14px;right:14px;background:#CC0000;border-radius:12px;padding:12px 16px;display:flex;justify-content:space-between;align-items:center;cursor:pointer;z-index:100;box-shadow:0 4px 20px rgba(204,0,0,.4);}
+.cart-info{font-size:13px;color:#fff;font-weight:700;}
+.cart-sub{font-size:11px;color:rgba(255,255,255,.8);}
+.cart-action{background:#fff;color:#CC0000;font-size:12px;font-weight:700;padding:6px 14px;border-radius:8px;}
+
+/* MODAL GENERAL */
+.modal-overlay{position:fixed;inset:0;background:rgba(0,0,0,.85);z-index:999;display:flex;align-items:flex-end;}
+.modal{background:#1e1e1e;border-radius:16px 16px 0 0;width:100%;padding:20px;max-height:90vh;overflow-y:auto;}
+.modal-title{font-size:15px;font-weight:700;color:#e2e8f0;margin-bottom:14px;}
+.mi-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #2a2a2a;}
+.mi-row:last-of-type{border-bottom:none;}
+.mi-name{font-size:12px;color:#94a3b8;flex:1;}
+.mi-btn{width:24px;height:24px;border-radius:5px;background:#2a2a2a;border:1px solid #333;color:#e2e8f0;cursor:pointer;font-size:14px;}
+.mi-qty{font-size:13px;font-weight:600;min-width:18px;text-align:center;color:#e2e8f0;}
+.mi-price{font-size:12px;font-weight:600;color:#FFD700;min-width:44px;text-align:right;}
+.total-row{display:flex;justify-content:space-between;font-size:15px;font-weight:700;padding:12px 0;border-top:1px solid #333;margin:8px 0;}
+.form-inp{width:100%;background:#111;border:1px solid #2a2a2a;border-radius:8px;padding:10px 12px;font-size:13px;color:#e2e8f0;outline:none;margin-bottom:10px;font-family:inherit;}
+.form-inp::placeholder{color:#444;}
+.confirm-btn{width:100%;background:#CC0000;color:#fff;font-size:14px;font-weight:700;padding:13px;border-radius:10px;border:none;cursor:pointer;margin-bottom:8px;}
+.cancel-btn{width:100%;background:#2a2a2a;color:#888;font-size:13px;padding:11px;border-radius:10px;border:none;cursor:pointer;}
+.loading-txt{text-align:center;padding:30px;color:#555;font-size:13px;}
+
+/* MODAL EDITAR PEDIDO ESPECIFICO */
+.modal-select{width:100%;background:#111;border:1px solid #333;border-radius:7px;padding:9px 12px;font-size:13px;color:#e2e8f0;outline:none;margin-bottom:12px;}
+.modal-btns{display:flex;gap:8px;margin-top:15px;}
+.modal-ok{flex:1;background:#CC0000;color:#fff;font-size:13px;font-weight:700;padding:10px;border-radius:8px;border:none;cursor:pointer;}
+.modal-cancel-btn{background:#2a2a2a;color:#888;font-size:13px;padding:10px 14px;border-radius:8px;border:none;cursor:pointer;}
+#edit-items-list { background: #1a1a1a; border-radius: 8px; border: 1px solid #2a2a2a; margin-bottom:10px;}
+.btn-add-more{width:100%; background:#2a2a2a; color:#38bdf8; border:1px dashed #38bdf8; padding:8px; border-radius:8px; font-size:11px; cursor:pointer; margin-bottom:15px;}
+
+/* BUSCADOR DENTRO DE MODAL */
+#edit-search-results{max-height:200px; overflow-y:auto; background:#111; border-radius:8px; border:1px solid #333; margin-top:5px; display:none;}
+.search-item-mini{padding:8px 12px; border-bottom:1px solid #222; display:flex; justify-content:space-between; align-items:center; font-size:12px; cursor:pointer;}
+.search-item-mini:hover{background:#1a1a1a;}
+</style>
+</head>
+<body>
+<div class="header">
+  <div style="display:flex;align-items:center;gap:10px;">
+    <div class="logo-sq">5/8</div>
+    <div><div class="header-name">FAST FOOD 58</div><div class="header-sub" id="mozo-sub">Mozo</div></div>
+  </div>
+  <button class="logout-btn" onclick="cerrarSesion()">Salir</button>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('pedidos',this)">📋 Mis Pedidos</div>
+  <div class="tab" onclick="setTab('menu',this)">🍽️ Tomar Pedido</div>
+</div>
+
+<div class="view active" id="v-pedidos">
+  <div class="card">
+    <div class="card-title">PEDIDOS ACTIVOS <span style="font-size:10px;color:#34d399;background:#0a2e1e;padding:2px 8px;border-radius:8px;border:0.5px solid #064e35;">Live ⚡</span></div>
+    <div id="pedidos-list"><div class="loading-txt">Cargando...</div></div>
+  </div>
+</div>
+
+<div class="view" id="v-menu">
+  <div class="cats" id="cats-bar"><div class="cat active" onclick="setCat('Todo',this)">Todo</div></div>
+  <div class="search-wrap"><input class="search-inp" type="text" placeholder="Buscar plato..." id="srch" oninput="renderMenu()"></div>
+  <div id="items-list" style="padding-bottom:80px;"></div>
+  <div class="cart-bar" id="cart-bar" style="display:none" onclick="abrirCarrito()">
+    <div><div class="cart-info" id="cbar-info">0 platos</div><div class="cart-sub" id="cbar-sub">S/ 0.00</div></div>
+    <div class="cart-action">Confirmar pedido ↗</div>
+  </div>
+</div>
+
+<div class="modal-overlay" id="modal-carrito" style="display:none">
+  <div class="modal" id="modal-carrito-body"></div>
+</div>
+
+<div class="modal-overlay" id="modal-editar" style="display:none">
+  <div class="modal">
+    <div class="modal-title">Editar pedido <span id="edit-num"></span></div>
+    
+    <label style="font-size:11px;color:#888;margin-bottom:4px;display:block;">Platos actuales</label>
+    <div id="edit-items-list"></div>
+
+    <button class="btn-add-more" onclick="toggleEditSearch()">+ Añadir producto del menú</button>
+    <div id="edit-search-box" style="display:none; margin-bottom:15px;">
+        <input type="text" class="form-inp" id="edit-search-inp" placeholder="Buscar en la carta..." oninput="searchInMenu(this.value)">
+        <div id="edit-search-results"></div>
+    </div>
+
+    <label style="font-size:11px;color:#888;margin-bottom:4px;display:block;">Cambiar estado</label>
+    <select class="modal-select" id="edit-estado">
+      <option value="espera">En espera</option>
+      <option value="cocina">En cocina</option>
+      <option value="listo">Listo</option>
+      <option value="entregado">Entregado</option>
+      <option value="cancelado">Cancelado</option>
+    </select>
+    
+    <label style="font-size:11px;color:#888;margin-bottom:4px;display:block;">Nota</label>
+    <input class="form-inp" type="text" id="edit-nota" placeholder="Nota...">
+    
+    <div class="modal-btns">
+      <button class="modal-cancel-btn" onclick="cerrarEditarModal()">Cancelar</button>
+      <button class="modal-ok" onclick="guardarEdicion()">Guardar Cambios</button>
+    </div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+const supabase = createClient(
+  'https://svftrsehuwkfmtdvzgek.supabase.co',
+  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InN2ZnRyc2VodXdrZm10ZHZ6Z2VrIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NzczMDg4MTIsImV4cCI6MjA5Mjg4NDgxMn0.PtKpXTQkWPwyk6BSVSq8HiJqgQ1qNITOIT2oNI8_oSI'
+)
+
+const nombre=localStorage.getItem('ff58_nombre')||'Mozo'
+const rol=localStorage.getItem('ff58_rol')
+if(rol==='admin')window.location.href='/admin.html'
+if(rol==='cocina')window.location.href='/cocina.html'
+document.getElementById('mozo-sub').textContent='Mozo · '+nombre
+
+let pedidos=[], menuItems=[], cart={}, catActiva='Todo', editId=null, itemsEnEdicion = []
+
+async function cargarPedidos(){
+  const{data}=await supabase.from('pedidos').select('*, pedido_items(*)').neq('estado','entregado').neq('estado','cancelado').order('created_at',{ascending:false})
+  pedidos=data||[]
+  renderPedidos()
+}
+
+async function cargarMenu(){
+  const{data}=await supabase.from('menu_items').select('*').eq('disponible',true).order('categoria')
+  menuItems=data||[]
+  const cats=['Todo',...new Set(data.map(p=>p.categoria))]
+  document.getElementById('cats-bar').innerHTML=cats.map(c=>`<div class="cat${catActiva===c?' active':''}" onclick="setCat('${c}',this)">${c}</div>`).join('')
+  renderMenu()
+}
+
+function renderPedidos(){
+  if(pedidos.length===0){document.getElementById('pedidos-list').innerHTML='<div class="loading-txt">Sin pedidos activos 🎉</div>';return}
+  const sL={espera:'En espera',cocina:'En cocina',listo:'¡LISTO!'}
+  const sC={espera:'s-espera',cocina:'s-cocina',listo:'s-listo'}
+  document.getElementById('pedidos-list').innerHTML=pedidos.map(p=>`
+    <div class="pedido-row">
+      <span class="ped-num">#${p.numero||'—'}</span>
+      <div class="ped-info">
+        <div class="ped-nombre">${p.cliente_nombre||'Cliente'} · ${p.mesa||'—'}</div>
+        <div class="ped-items">${(p.pedido_items||[]).map(i=>`${i.cantidad}x ${i.nombre}`).join(', ')}</div>
+        ${p.nota?`<div class="ped-nota">📝 ${p.nota}</div>`:''}
+      </div>
+      <div style="display:flex;flex-direction:column;align-items:flex-end;gap:6px;">
+        <span class="ped-total">S/${parseFloat(p.total||0).toFixed(2)}</span>
+        <span class="s-pill ${sC[p.estado]||'s-espera'}">${sL[p.estado]||p.estado}</span>
+        <div class="btn-row">
+          ${p.estado==='listo'?`<button class="act-btn btn-entregar" onclick="entregar('${p.id}')">✓ Entregar</button>`:''}
+          <button class="act-btn btn-editar" onclick="abrirEditarModal('${p.id}')">Editar</button>
+          <button class="act-btn btn-eliminar" onclick="eliminar('${p.id}')">Eliminar</button>
+        </div>
+      </div>
+    </div>`).join('')
+}
+
+// FUNCIONES DEL MENÚ (TOMAR PEDIDO NUEVO)
+window.setCat=(c,el)=>{
+  catActiva=c
+  document.querySelectorAll('.cat').forEach(b=>b.classList.remove('active'))
+  if(el)el.classList.add('active')
+  renderMenu()
+}
+
+window.renderMenu=()=>{
+  const q=document.getElementById('srch').value.toLowerCase()
+  const filtered=menuItems.filter(p=>{
+    const catOk=catActiva==='Todo'||p.categoria===catActiva
+    const qOk=!q||p.nombre.toLowerCase().includes(q)
+    return catOk&&qOk
+  })
+  document.getElementById('items-list').innerHTML=filtered.map(p=>`
+    <div class="item${cart[p.id]?' added':''}">
+      <div class="item-icon">${p.icono||'🍽️'}</div>
+      <div style="flex:1;">
+        <div class="item-name">${p.nombre}</div>
+        ${p.descripcion?`<div class="item-desc">${p.descripcion}</div>`:''}
+        <div style="display:flex;justify-content:space-between;align-items:center;margin-top:6px;">
+          <span class="item-price">S/${parseFloat(p.precio).toFixed(2)}</span>
+          <button class="add-btn ${cart[p.id]?'add-done':'add-idle'}" onclick="addItem('${p.id}')">${cart[p.id]?'✓ '+cart[p.id]+'x':'+ Agregar'}</button>
+        </div>
+      </div>
+    </div>`).join('')
+  updateCartBar()
+}
+
+window.addItem=(id)=>{cart[id]=(cart[id]||0)+1;window.renderMenu()}
+function subtotal(){return Object.entries(cart).reduce((s,[id,q])=>{const p=menuItems.find(m=>m.id===id);return s+(p?parseFloat(p.precio)*q:0)},0)}
+function totalItems(){return Object.values(cart).reduce((s,q)=>s+q,0)}
+function updateCartBar(){
+  const t=totalItems(),s=subtotal(),bar=document.getElementById('cart-bar')
+  if(t>0){bar.style.display='flex';document.getElementById('cbar-info').textContent=t+' platos';document.getElementById('cbar-sub').textContent='S/ '+s.toFixed(2)}
+  else bar.style.display='none'
+}
+
+window.abrirCarrito=()=>{
+  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menuItems.find(m=>m.id===id),qty:q}))
+  document.getElementById('modal-carrito').style.display='flex'
+  document.getElementById('modal-carrito-body').innerHTML=`
+    <div class="modal-title">Confirmar pedido</div>
+    ${items.map(it=>`<div class="mi-row">
+      <span class="mi-name">${it.icono||'🍽️'} ${it.nombre}</span>
+      <button class="mi-btn" onclick="cambiarQty('${it.id}',-1)">−</button>
+      <span class="mi-qty">${it.qty}</span>
+      <button class="mi-btn" onclick="cambiarQty('${it.id}',1)">+</button>
+      <span class="mi-price">S/${(parseFloat(it.precio)*it.qty).toFixed(2)}</span>
+    </div>`).join('')}
+    <div class="total-row"><span>Total</span><span style="color:#FFD700">S/ ${subtotal().toFixed(2)}</span></div>
+    <input class="form-inp" type="text" id="m-nombre" placeholder="Nombre del cliente">
+    <input class="form-inp" type="text" id="m-mesa" placeholder="Mesa (ej: Mesa 3)">
+    <input class="form-inp" type="text" id="m-nota" placeholder="Nota para cocina">
+    <button class="confirm-btn" onclick="confirmarPedido()">Enviar a cocina ✓</button>
+    <button class="cancel-btn" onclick="document.getElementById('modal-carrito').style.display='none'">Cancelar</button>`
+}
+
+window.cambiarQty=(id,d)=>{
+  cart[id]=Math.max(0,(cart[id]||0)+d)
+  if(cart[id]===0)delete cart[id]
+  if(totalItems()===0){document.getElementById('modal-carrito').style.display='none';window.renderMenu();return}
+  window.abrirCarrito()
+}
+
+window.confirmarPedido=async()=>{
+  const nombre=document.getElementById('m-nombre').value||'Cliente'
+  const mesa=document.getElementById('m-mesa').value||'S/M'
+  const nota=document.getElementById('m-nota').value||''
+  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menuItems.find(m=>m.id===id),qty:q}))
+  const total=subtotal()
+  const{data:pedido}=await supabase.from('pedidos').insert([{cliente_nombre:nombre,mesa,estado:'espera',total,nota}]).select().single()
+  if(pedido){
+    await supabase.from('pedido_items').insert(items.map(it=>({pedido_id:pedido.id,menu_item_id:it.id,nombre:it.nombre,cantidad:it.qty,precio_unit:parseFloat(it.precio)})))
+  }
+  cart={}
+  document.getElementById('modal-carrito').style.display='none'
+  window.renderMenu()
+  setTab('pedidos',document.querySelectorAll('.tab')[0])
+  await cargarPedidos()
+}
+
+// LÓGICA DE EDICIÓN DE PEDIDOS EXISTENTES
+window.abrirEditarModal=(id)=>{
+  editId=id
+  const p=pedidos.find(x=>x.id===id)
+  itemsEnEdicion = [...(p.pedido_items || [])]
+  
+  document.getElementById('edit-num').textContent='#'+(p?.numero||'—')
+  document.getElementById('edit-estado').value=p?.estado||'espera'
+  document.getElementById('edit-nota').value=p?.nota||''
+  
+  // Reset de buscador interno
+  document.getElementById('edit-search-box').style.display = 'none';
+  document.getElementById('edit-search-inp').value = '';
+  document.getElementById('edit-search-results').style.display = 'none';
+
+  renderItemsEdicion()
+  document.getElementById('modal-editar').style.display='flex'
+}
+
+function renderItemsEdicion() {
+  const container = document.getElementById('edit-items-list');
+  if (itemsEnEdicion.length === 0) {
+    container.innerHTML = '<div class="loading-txt">No hay platos</div>';
+    return;
+  }
+  container.innerHTML = itemsEnEdicion.map((it, idx) => `
+    <div class="mi-row" style="padding: 10px 14px;">
+      <span class="mi-name" style="font-size:11px;">${it.nombre}</span>
+      <div style="display:flex;align-items:center;gap:6px;">
+        <button class="mi-btn" onclick="cambiarQtyEdicion(${idx}, -1)">−</button>
+        <span class="mi-qty">${it.cantidad}</span>
+        <button class="mi-btn" onclick="cambiarQtyEdicion(${idx}, 1)">+</button>
+      </div>
+    </div>`).join('')
+}
+
+window.cambiarQtyEdicion = (idx, delta) => {
+  itemsEnEdicion[idx].cantidad += delta;
+  if (itemsEnEdicion[idx].cantidad <= 0) itemsEnEdicion.splice(idx, 1);
+  renderItemsEdicion();
+}
+
+// BUSCADOR PARA AGREGAR PRODUCTOS NUEVOS A LA EDICIÓN
+window.toggleEditSearch = () => {
+    const box = document.getElementById('edit-search-box');
+    box.style.display = (box.style.display === 'none') ? 'block' : 'none';
+}
+
+window.searchInMenu = (val) => {
+    const resDiv = document.getElementById('edit-search-results');
+    if(!val) { resDiv.style.display = 'none'; return; }
+    
+    const filtered = menuItems.filter(m => m.nombre.toLowerCase().includes(val.toLowerCase()));
+    if(filtered.length > 0) {
+        resDiv.style.display = 'block';
+        resDiv.innerHTML = filtered.map(m => `
+            <div class="search-item-mini" onclick="addNewItemToEdit('${m.id}')">
+                <span>${m.nombre}</span>
+                <span style="color:#FFD700">S/${parseFloat(m.precio).toFixed(2)} +</span>
+            </div>
+        `).join('');
+    } else {
+        resDiv.innerHTML = '<div class="loading-txt">No encontrado</div>';
+    }
+}
+
+window.addNewItemToEdit = (menuId) => {
+    const plato = menuItems.find(m => m.id === menuId);
+    // Verificar si ya está en la lista de edición
+    const existe = itemsEnEdicion.find(it => it.menu_item_id === menuId);
+    if(existe) {
+        existe.cantidad += 1;
+    } else {
+        itemsEnEdicion.push({
+            pedido_id: editId,
+            menu_item_id: plato.id,
+            nombre: plato.nombre,
+            cantidad: 1,
+            precio_unit: parseFloat(plato.precio)
+        });
+    }
+    renderItemsEdicion();
+    document.getElementById('edit-search-results').style.display = 'none';
+    document.getElementById('edit-search-inp').value = '';
+}
+
+window.cerrarEditarModal=()=>{document.getElementById('modal-editar').style.display='none';editId=null}
+
+window.guardarEdicion=async()=>{
+  if(!editId) return
+  const nuevoTotal = itemsEnEdicion.reduce((s, it) => s + (it.cantidad * (it.precio_unit || 0)), 0);
+
+  try {
+      await supabase.from('pedidos').update({
+        estado: document.getElementById('edit-estado').value,
+        nota: document.getElementById('edit-nota').value,
+        total: nuevoTotal
+      }).eq('id', editId);
+
+      await supabase.from('pedido_items').delete().eq('pedido_id', editId);
+      
+      if (itemsEnEdicion.length > 0) {
+        await supabase.from('pedido_items').insert(itemsEnEdicion.map(it => ({
+          pedido_id: editId,
+          menu_item_id: it.menu_item_id,
+          nombre: it.nombre,
+          cantidad: it.cantidad,
+          precio_unit: it.precio_unit
+        })));
+      }
+
+      cerrarEditarModal();
+      await cargarPedidos();
+  } catch (e) {
+      alert("Error al actualizar pedido");
+  }
+}
+
+window.entregar=async(id)=>{await supabase.from('pedidos').update({estado:'entregado'}).eq('id',id);await cargarPedidos()}
+window.eliminar=async(id)=>{
+  if(!confirm('¿Eliminar este pedido?'))return
+  await supabase.from('pedido_items').delete().eq('pedido_id',id)
+  await supabase.from('pedidos').delete().eq('id',id)
+  await cargarPedidos()
+}
+
+window.setTab=(id,el)=>{
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'))
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+  document.getElementById('v-'+id).classList.add('active')
+  el.classList.add('active')
+}
+window.cerrarSesion=async()=>{
+  await supabase.auth.signOut()
+  localStorage.removeItem('ff58_rol');localStorage.removeItem('ff58_nombre')
+  window.location.href='/login.html'
+}
+
+supabase.channel('mozo-live').on('postgres_changes',{event:'*',schema:'public',table:'pedidos'},cargarPedidos).subscribe()
+cargarPedidos();cargarMenu()
+setInterval(cargarPedidos,15000)
+</script>
+</body>
+</html>
