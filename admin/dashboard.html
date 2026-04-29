@@ -1,0 +1,231 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gregorisa — Panel Admin</title>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#111;font-family:system-ui,sans-serif;color:#e2e8f0;min-height:100vh;}
+.header{background:#2D6A4F;padding:14px 16px;display:flex;justify-content:space-between;align-items:center;}
+.logo-row{display:flex;align-items:center;gap:10px;}
+.logo-sq{width:34px;height:34px;background:#fff;border-radius:6px;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:900;color:#2D6A4F;}
+.header-name{font-size:14px;font-weight:700;color:#fff;}
+.header-sub{font-size:10px;color:rgba(255,255,255,.7);}
+.live-dot{width:7px;height:7px;border-radius:50%;background:#34d399;display:inline-block;margin-right:5px;}
+.tabs{display:flex;background:#1a1a1a;border-bottom:1px solid #2a2a2a;overflow-x:auto;}
+.tab{padding:12px 16px;font-size:12px;font-weight:500;color:#666;cursor:pointer;white-space:nowrap;border-bottom:2px solid transparent;transition:all .15s;}
+.tab:hover{color:#ccc;}
+.tab.active{color:#2D6A4F;border-bottom-color:#2D6A4F;}
+.view{display:none;padding:14px;}.view.active{display:block;}
+.met-grid{display:grid;grid-template-columns:1fr 1fr;gap:8px;margin-bottom:14px;}
+.met{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:12px;}
+.met-lbl{font-size:11px;color:#555;margin-bottom:4px;}
+.met-val{font-size:22px;font-weight:700;color:#e2e8f0;}
+.met-delta{font-size:11px;color:#34d399;margin-top:3px;}
+.card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:14px;margin-bottom:10px;}
+.card-title{font-size:12px;font-weight:600;color:#888;margin-bottom:12px;}
+.pedido-row{display:flex;align-items:center;gap:8px;padding:8px 0;border-bottom:1px solid #222;}
+.pedido-row:last-child{border-bottom:none;}
+.ped-num{font-size:12px;font-weight:700;color:#2D6A4F;min-width:40px;}
+.ped-desc{font-size:12px;color:#94a3b8;flex:1;}
+.ped-total{font-size:12px;font-weight:600;color:##B7E4C7;}
+.s-pill{font-size:10px;padding:2px 8px;border-radius:8px;}
+.s-espera{background:#1a1a00;color:##B7E4C7;border:0.5px solid #666600;}
+.s-cocina{background:#1a1a2e;color:#818cf8;border:0.5px solid #312e81;}
+.s-listo{background:#0a2e1e;color:#34d399;border:0.5px solid #064e35;}
+.s-entregado{background:#1e1e1e;color:#555;border:0.5px solid #333;}
+.avanzar-btn{font-size:11px;padding:3px 9px;border-radius:6px;border:0.5px solid #2D6A4F;color:#2D6A4F;background:transparent;cursor:pointer;}
+.avanzar-btn:hover{background:#0a1f17;}
+.menu-row{display:flex;align-items:center;gap:10px;padding:8px 0;border-bottom:1px solid #222;}
+.menu-row:last-child{border-bottom:none;}
+.m-icon{font-size:18px;width:32px;text-align:center;}
+.m-name{font-size:13px;color:#e2e8f0;flex:1;}
+.m-cat{font-size:11px;color:#555;}
+.m-price{font-size:13px;font-weight:600;color:##B7E4C7;min-width:50px;text-align:right;}
+.toggle{width:32px;height:18px;border-radius:9px;cursor:pointer;border:none;transition:background .15s;position:relative;flex-shrink:0;}
+.ton{background:#2D6A4F;}.toff{background:#333;}
+.loading-txt{text-align:center;padding:40px;color:#555;font-size:13px;}
+.error-box{background:#0a1f17;border:1px solid #1B4332;border-radius:8px;padding:12px;font-size:12px;color:#86efac;margin-bottom:10px;}
+.realtime-badge{font-size:10px;color:#34d399;background:#0a2e1e;padding:2px 8px;border-radius:8px;border:0.5px solid #064e35;}
+</style>
+</head>
+<body>
+
+<div class="header">
+  <div class="logo-row">
+    <div class="logo-sq">5/8</div>
+    <div>
+      <div class="header-name">GREGORISA</div>
+      <div class="header-sub">Panel de administración</div>
+    </div>
+  </div>
+  <div>
+    <span class="live-dot"></span>
+    <span style="font-size:11px;color:rgba(255,255,255,.8);" id="clk-txt">--:--</span>
+  </div>
+</div>
+
+<div class="tabs">
+  <div class="tab active" onclick="setTab('resumen',this)">📊 Resumen</div>
+  <div class="tab" onclick="setTab('pedidos',this)">📋 Pedidos <span class="realtime-badge" id="ped-badge">0</span></div>
+  <div class="tab" onclick="setTab('menu',this)">🍗 Carta</div>
+</div>
+
+<div class="view active" id="v-resumen">
+  <div class="met-grid">
+    <div class="met"><div class="met-lbl">Ventas hoy</div><div class="met-val" id="m-ventas">S/—</div><div class="met-delta" id="m-pedidos-hoy">— pedidos</div></div>
+    <div class="met"><div class="met-lbl">Pedidos activos</div><div class="met-val" id="m-activos">—</div><div class="met-delta">en este momento</div></div>
+    <div class="met"><div class="met-lbl">Ticket promedio</div><div class="met-val" id="m-ticket">S/—</div><div class="met-delta">por pedido</div></div>
+    <div class="met"><div class="met-lbl">Productos activos</div><div class="met-val" id="m-productos">—</div><div class="met-delta">en la carta</div></div>
+  </div>
+  <div class="card">
+    <div class="card-title">ÚLTIMOS PEDIDOS DEL DÍA</div>
+    <div id="resumen-pedidos"><div class="loading-txt">Cargando...</div></div>
+  </div>
+</div>
+
+<div class="view" id="v-pedidos">
+  <div class="card">
+    <div class="card-title">PEDIDOS EN TIEMPO REAL <span class="realtime-badge">Live ⚡</span></div>
+    <div id="pedidos-list"><div class="loading-txt">Cargando pedidos...</div></div>
+  </div>
+</div>
+
+<div class="view" id="v-menu">
+  <div class="card">
+    <div class="card-title">CARTA DE PRODUCTOS — Gregorisa</div>
+    <div id="menu-list"><div class="loading-txt">Cargando carta...</div></div>
+  </div>
+</div>
+
+<script type="module">
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2'
+
+const supabase = createClient(
+  'https://GREGORISA_SUPABASE_URL',
+  'GREGORISA_ANON_KEY'
+)
+
+let pedidos = [], menuItems = []
+
+// Reloj
+setInterval(() => {
+  document.getElementById('clk-txt').textContent =
+    new Date().toLocaleTimeString('es-PE',{hour:'2-digit',minute:'2-digit',second:'2-digit'})
+}, 1000)
+
+// Cargar pedidos
+async function cargarPedidos() {
+  const { data } = await supabase
+    .from('pedidos')
+    .select('*, pedido_items(*)')
+    .order('created_at', { ascending: false })
+    .limit(50)
+  pedidos = data || []
+  renderPedidos()
+  renderResumen()
+  document.getElementById('ped-badge').textContent =
+    pedidos.filter(p=>p.estado!=='entregado').length
+}
+
+// Suscripción Realtime
+supabase.channel('admin-pedidos')
+  .on('postgres_changes', { event: '*', schema: 'public', table: 'pedidos' }, () => {
+    cargarPedidos()
+  })
+  .subscribe()
+
+function renderPedidos() {
+  const activos = pedidos.filter(p => p.estado !== 'entregado')
+  if (activos.length === 0) {
+    document.getElementById('pedidos-list').innerHTML = '<div class="loading-txt">Sin pedidos activos 🎉</div>'
+    return
+  }
+  const statusLabel = {espera:'En espera',cocina:'En cocina',listo:'Listo ✓'}
+  const statusClass = {espera:'s-espera',cocina:'s-cocina',listo:'s-listo'}
+  const siguiente = {espera:'cocina',cocina:'listo',listo:'entregado'}
+  const btnLabel = {espera:'Iniciar',cocina:'Listo',listo:'Entregar'}
+
+  document.getElementById('pedidos-list').innerHTML = activos.map(p => `
+    <div class="pedido-row">
+      <span class="ped-num">#${p.numero||'—'}</span>
+      <div style="flex:1;min-width:0;">
+        <div style="font-size:12px;color:#e2e8f0;font-weight:500;">${p.cliente_nombre||'Cliente'} · ${p.mesa||'—'}</div>
+        <div style="font-size:11px;color:#555;">${(p.pedido_items||[]).map(i=>`${i.cantidad}x ${i.nombre}`).join(' · ')}</div>
+      </div>
+      <span class="ped-total">S/${parseFloat(p.total||0).toFixed(2)}</span>
+      <span class="s-pill ${statusClass[p.estado]||'s-entregado'}">${statusLabel[p.estado]||p.estado}</span>
+      ${p.estado!=='entregado'?`<button class="avanzar-btn" onclick="avanzar('${p.id}','${siguiente[p.estado]}')">${btnLabel[p.estado]}</button>`:''}
+    </div>`).join('')
+}
+
+function renderResumen() {
+  const hoy = new Date().toISOString().split('T')[0]
+  const pedidosHoy = pedidos.filter(p => p.created_at?.startsWith(hoy))
+  const entregados = pedidosHoy.filter(p => p.estado === 'entregado')
+  const total = entregados.reduce((s,p) => s + parseFloat(p.total||0), 0)
+  const activos = pedidos.filter(p => p.estado !== 'entregado').length
+  const ticket = entregados.length > 0 ? total/entregados.length : 0
+
+  document.getElementById('m-ventas').textContent = 'S/' + total.toFixed(2)
+  document.getElementById('m-pedidos-hoy').textContent = entregados.length + ' entregados hoy'
+  document.getElementById('m-activos').textContent = activos
+  document.getElementById('m-ticket').textContent = 'S/' + ticket.toFixed(2)
+
+  document.getElementById('resumen-pedidos').innerHTML = pedidos.slice(0,6).map(p => `
+    <div class="pedido-row">
+      <span class="ped-num">#${p.numero||'—'}</span>
+      <span class="ped-desc">${p.cliente_nombre||'Cliente'} · ${p.mesa||'—'}</span>
+      <span class="ped-total">S/${parseFloat(p.total||0).toFixed(2)}</span>
+      <span class="s-pill s-${p.estado||'entregado'}">${p.estado||'—'}</span>
+    </div>`).join('') || '<div class="loading-txt">Sin pedidos hoy</div>'
+}
+
+// Cargar menú
+async function cargarMenu() {
+  const { data } = await supabase.from('menu_items').select('*').order('categoria')
+  menuItems = data || []
+  document.getElementById('m-productos').textContent = menuItems.filter(m=>m.disponible).length
+  renderMenu()
+}
+
+function renderMenu() {
+  document.getElementById('menu-list').innerHTML = menuItems.map((p,i) => `
+    <div class="menu-row">
+      <span class="m-icon">${p.icono||'🍽️'}</span>
+      <div style="flex:1;min-width:0;">
+        <div class="m-name">${p.nombre}</div>
+        <div class="m-cat">${p.categoria}${p.dias_disponible?' · Solo '+p.dias_disponible:''}</div>
+      </div>
+      <span class="m-price">S/${parseFloat(p.precio).toFixed(2)}</span>
+      <button class="toggle ${p.disponible?'ton':'toff'}" onclick="toggleMenu('${p.id}',${!p.disponible},${i})" title="${p.disponible?'Desactivar':'Activar'}"></button>
+    </div>`).join('')
+}
+
+window.toggleMenu = async (id, nuevoEstado, idx) => {
+  await supabase.from('menu_items').update({ disponible: nuevoEstado }).eq('id', id)
+  menuItems[idx].disponible = nuevoEstado
+  document.getElementById('m-productos').textContent = menuItems.filter(m=>m.disponible).length
+  renderMenu()
+}
+
+window.avanzar = async (id, nuevoEstado) => {
+  await supabase.from('pedidos').update({ estado: nuevoEstado }).eq('id', id)
+  await cargarPedidos()
+}
+
+window.setTab = (id, el) => {
+  document.querySelectorAll('.view').forEach(v=>v.classList.remove('active'))
+  document.querySelectorAll('.tab').forEach(t=>t.classList.remove('active'))
+  document.getElementById('v-'+id).classList.add('active')
+  el.classList.add('active')
+}
+
+// Iniciar
+cargarPedidos()
+cargarMenu()
+setInterval(cargarPedidos, 15000) // refresh cada 15 seg como backup
+</script>
+</body>
+</html>
