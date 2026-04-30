@@ -279,8 +279,8 @@ window.render=()=>{
   updateCartBar()
 }
 
-window.addItem=(id)=>{cart[id]=(cart[id]||0)+1;window.render()}
-function subtotal(){return Object.entries(cart).reduce((s,[id,q])=>{const p=menu.find(m=>m.id===id);return s+(p?parseFloat(p.precio)*q:0)},0)}
+window.addItem=(id)=>{const intId=parseInt(id);cart[intId]=(cart[intId]||0)+1;window.render()}
+function subtotal(){return Object.entries(cart).reduce((s,[id,q])=>{const p=menu.find(m=>m.id==id);return s+(p?parseFloat(p.precio)*q:0)},0)}
 function totalItems(){return Object.values(cart).reduce((s,q)=>s+q,0)}
 
 function updateCartBar(){
@@ -298,7 +298,7 @@ function updateCartBar(){
 
 window.abrirModal=()=>{
   if(totalItems()===0)return
-  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menu.find(m=>m.id===id),qty:q}))
+  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menu.find(m=>m.id==id),qty:q}))
   document.getElementById('overlay').style.display='flex'
   document.getElementById('modal-content').innerHTML=`
     <div class="modal-title">Tu pedido 🛒</div>
@@ -322,8 +322,9 @@ window.abrirModal=()=>{
 }
 
 window.cambiarQty=(id,d)=>{
-  cart[id]=Math.max(0,(cart[id]||0)+d)
-  if(cart[id]===0) delete cart[id]
+  const intId=parseInt(id)
+  cart[intId]=Math.max(0,(cart[intId]||0)+d)
+  if(cart[intId]===0) delete cart[intId]
   window.render()
   if(totalItems()===0){cerrarModal();return}
   window.abrirModal()
@@ -333,7 +334,7 @@ window.cerrarModal=()=>{document.getElementById('overlay').style.display='none'}
 
 window.confirmarPedido=async()=>{
   const nota=document.getElementById('m-nota')?.value||''
-  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menu.find(m=>m.id===id),qty:q}))
+  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menu.find(m=>m.id==id),qty:q}))
   const total=subtotal()
 
   const{data:pedido,error}=await supabase
