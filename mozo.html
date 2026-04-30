@@ -191,10 +191,10 @@ body{background:#111;font-family:system-ui,sans-serif;color:#e2e8f0;min-height:1
 </div>
 
 <script type="module">
-import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.49.4'
+import { createClient } from 'https://esm.sh/@supabase/supabase-js@2.50.0'
 const supabase = createClient(
   'https://rsebinhkyijetmfwnugl.supabase.co',
-  'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJzZWJpbmhreWlqZXRtZndudWdsIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Nzc0Mzk1NzEsImV4cCI6MjA5MzAxNTU3MX0.C4WlOxrG6ilhDfaMkFhtfl_HxLRXC2Pkf4gcpGZTouE'
+  'sb_publishable_Ofs4pJvD_TBDuOz0gkHLPA_nucPd3Vl'
 )
 
 let pedidos=[], menuItems=[], cart={}, catActiva='Todo', editId=null, itemsEnEdicion = []
@@ -302,7 +302,7 @@ window.renderMenu=()=>{
 }
 
 window.addItem=(id)=>{cart[id]=(cart[id]||0)+1;window.renderMenu()}
-function subtotal(){return Object.entries(cart).reduce((s,[id,q])=>{const p=menuItems.find(m=>m.id===id);return s+(p?parseFloat(p.precio)*q:0)},0)}
+function subtotal(){return Object.entries(cart).reduce((s,[id,q])=>{const p=menuItems.find(m=>m.id==id);return s+(p?parseFloat(p.precio)*q:0)},0)}
 function totalItems(){return Object.values(cart).reduce((s,q)=>s+q,0)}
 function updateCartBar(){
   const t=totalItems(),s=subtotal(),bar=document.getElementById('cart-bar')
@@ -311,7 +311,7 @@ function updateCartBar(){
 }
 
 window.abrirCarrito=()=>{
-  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menuItems.find(m=>m.id===id),qty:q}))
+  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menuItems.find(m=>m.id==id),qty:q}))
   document.getElementById('modal-carrito').style.display='flex'
   document.getElementById('modal-carrito-body').innerHTML=`
     <div class="modal-title">Confirmar pedido</div>
@@ -341,11 +341,11 @@ window.confirmarPedido=async()=>{
   const nombre=document.getElementById('m-nombre').value||'Cliente'
   const mesa=document.getElementById('m-mesa').value||'S/M'
   const nota=document.getElementById('m-nota').value||''
-  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menuItems.find(m=>m.id===id),qty:q}))
+  const items=Object.entries(cart).filter(([,q])=>q>0).map(([id,q])=>({...menuItems.find(m=>m.id==id),qty:q}))
   const total=subtotal()
   const{data:pedido}=await supabase.from('pedidos').insert([{cliente_nombre:nombre,mesa,estado:'espera',total,nota}]).select().single()
   if(pedido){
-    await supabase.from('pedido_items').insert(items.map(it=>({pedido_id:pedido.id,menu_item_id:it.id,nombre:it.nombre,cantidad:it.qty,precio_unit:parseFloat(it.precio)})))
+    await supabase.from('pedido_items').insert(items.map(it=>({pedido_id:pedido.id,menu_item_id:parseInt(it.id),nombre:it.nombre,cantidad:it.qty,precio_unit:parseFloat(it.precio)})))
   }
   cart={}
   document.getElementById('modal-carrito').style.display='none'
