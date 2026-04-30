@@ -1,0 +1,111 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Gregorisa — QR Mesas</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/qrcodejs/1.0.0/qrcode.min.js"></script>
+<style>
+*{box-sizing:border-box;margin:0;padding:0;}
+body{background:#111;font-family:system-ui,sans-serif;color:#e2e8f0;padding:20px;min-height:100vh;}
+h1{font-size:18px;font-weight:700;color:#e2e8f0;margin-bottom:4px;}
+.sub{font-size:13px;color:#555;margin-bottom:20px;}
+.config-card{background:#1a1a1a;border:1px solid #2a2a2a;border-radius:10px;padding:14px;margin-bottom:16px;}
+.config-row{display:flex;gap:10px;align-items:flex-end;flex-wrap:wrap;}
+.field{flex:1;min-width:120px;}
+.label{font-size:11px;color:#888;margin-bottom:5px;}
+.inp{width:100%;background:#111;border:1px solid #2a2a2a;border-radius:7px;padding:8px 10px;font-size:13px;color:#e2e8f0;outline:none;font-family:inherit;}
+.inp:focus{border-color:#2D6A4F;}
+.gen-btn{background:#2D6A4F;color:#fff;font-size:13px;font-weight:700;padding:9px 18px;border-radius:8px;border:none;cursor:pointer;white-space:nowrap;}
+.gen-btn:hover{opacity:.88;}
+.qr-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(200px,1fr));gap:16px;}
+.qr-card{background:#fff;border-radius:12px;padding:20px;text-align:center;cursor:pointer;transition:transform .15s;border:3px solid transparent;}
+.qr-card:hover{transform:scale(1.02);border-color:#2D6A4F;}
+.qr-num{font-size:14px;font-weight:700;color:#2D6A4F;margin-bottom:10px;font-family:system-ui;}
+.qr-box{display:flex;justify-content:center;margin-bottom:10px;}
+.qr-url{font-size:10px;color:#888;word-break:break-all;}
+.qr-hint{font-size:11px;color:#555;text-align:center;margin-top:16px;}
+.print-btn{background:#2D6A4F;color:#fff;font-size:13px;font-weight:700;padding:10px 24px;border-radius:9px;border:none;cursor:pointer;display:block;margin:0 auto 20px;}
+@media print{
+  body{background:#fff;color:#000;padding:0;}
+  .config-card,.print-btn,.qr-hint{display:none!important;}
+  h1,.sub{color:#000;}
+  .qr-grid{grid-template-columns:repeat(3,1fr);gap:20px;}
+  .qr-card{border:2px solid #2D6A4F;break-inside:avoid;}
+  .qr-num{color:#2D6A4F;}
+}
+</style>
+</head>
+<body>
+<h1>🍽️ Gregorisa — Generador de QR para Mesas</h1>
+<div class="sub">Configura cuántas mesas tienes y haz clic en "Generar QR". Luego imprime esta página.</div>
+
+<div class="config-card">
+  <div class="config-row">
+    <div class="field">
+      <div class="label">Número de mesas</div>
+      <input class="inp" type="number" id="num-mesas" value="10" min="1" max="50">
+    </div>
+    <div class="field">
+      <div class="label">URL del menú</div>
+      <input class="inp" type="text" id="menu-url" value="https://gregorisa.vercel.app/public/menu.html">
+    </div>
+    <button class="gen-btn" onclick="generarQRs()">Generar QR →</button>
+  </div>
+</div>
+
+<button class="print-btn" onclick="window.print()">🖨️ Imprimir todos los QR</button>
+
+<div class="qr-grid" id="qr-grid"></div>
+
+<div class="qr-hint" id="qr-hint" style="display:none;">
+  💡 Haz clic en cualquier QR para abrirlo en grande · Usa el botón "Imprimir" para sacarlos todos en papel
+</div>
+
+<script>
+function generarQRs(){
+  const n=parseInt(document.getElementById('num-mesas').value)||10
+  const url=document.getElementById('menu-url').value||'https://gregorisa.vercel.app/public/menu.html'
+  const grid=document.getElementById('qr-grid')
+  grid.innerHTML=''
+
+  for(let i=1;i<=n;i++){
+    const card=document.createElement('div')
+    card.className='qr-card'
+    card.onclick=()=>window.open(url,'_blank')
+
+    const num=document.createElement('div')
+    num.className='qr-num'
+    num.textContent='Mesa '+i
+
+    const box=document.createElement('div')
+    box.className='qr-box'
+    const qrDiv=document.createElement('div')
+    box.appendChild(qrDiv)
+
+    const urlDiv=document.createElement('div')
+    urlDiv.className='qr-url'
+    urlDiv.textContent=url
+
+    card.appendChild(num)
+    card.appendChild(box)
+    card.appendChild(urlDiv)
+    grid.appendChild(card)
+
+    new QRCode(qrDiv,{
+      text:url,
+      width:150,
+      height:150,
+      colorDark:'#000000',
+      colorLight:'#ffffff',
+      correctLevel:QRCode.CorrectLevel.H
+    })
+  }
+  document.getElementById('qr-hint').style.display='block'
+}
+
+// Generar automáticamente al cargar
+window.onload=()=>generarQRs()
+</script>
+</body>
+</html>
